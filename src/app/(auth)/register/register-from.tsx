@@ -1,5 +1,6 @@
 "use client"
 
+import authApiRequest from "@/apirequest/auth"
 import { Button } from "@/components/ui/button"
 import {
     Form,
@@ -10,19 +11,23 @@ import {
     FormMessage
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
+import { useToast } from "@/components/ui/use-toast"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
 import { RegisterBody, RegisterBodyType } from '../../schemaValidations/auth.schema'
-import { headers } from "next/headers"
-import envConfig from "@/config"
+
+import { useRouter } from "next/navigation"
 
 const formSchema = z.object({
     username: z.string().min(2).max(50),
 })
 
 export default function RegisterForm() {
-    console.log(envConfig.NEXT_PUBLIC_API_ENDPOINT)
+
+    const { toast } = useToast()
+    const router = useRouter()
+
 
     const form = useForm<RegisterBodyType>({
         resolver: zodResolver(RegisterBody),
@@ -35,27 +40,15 @@ export default function RegisterForm() {
     })
 
     async function onSubmit(values: RegisterBodyType) {
-        try {
-            const response = await fetch(`${envConfig.NEXT_PUBLIC_API_ENDPOINT}/auth/register`, {
 
-                body: JSON.stringify(values),
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                method: 'POST',
-            });
-    
-            if (!response.ok) {
-                throw new Error(`Server error: ${response.status}`);
-            }
-    
-            const result = await response.json();
-            console.log(result);
-        } catch (error) {
-            console.error("Error submitting form:", error);
-        }
+        const response = await authApiRequest.register(values)
+        // try{
+        //   toast({
+
+        //   })  
+        // }
     }
-    
+
 
     return (
         <div className="w-full flex justify-center">
@@ -66,13 +59,15 @@ export default function RegisterForm() {
                         <FormField
                             control={form.control}
                             name="name"
-                            render={({ field }) => (
+                            render={({ field, formState: { errors } }) => (
                                 <FormItem>
                                     <FormLabel>Tên</FormLabel>
                                     <FormControl>
-                                        <Input placeholder="shadcn" {...field} />
+                                        <Input placeholder="Tên" {...field} />
                                     </FormControl>
                                     <FormMessage />
+                                    <div className="">
+                                    </div>
                                 </FormItem>
                             )}
                         />
@@ -83,7 +78,7 @@ export default function RegisterForm() {
                                 <FormItem>
                                     <FormLabel>Email</FormLabel>
                                     <FormControl>
-                                        <Input placeholder="shadcn" {...field} />
+                                        <Input placeholder="Email" {...field} />
                                     </FormControl>
                                     <FormMessage />
                                 </FormItem>
@@ -97,7 +92,7 @@ export default function RegisterForm() {
                                 <FormItem>
                                     <FormLabel>Password</FormLabel>
                                     <FormControl>
-                                        <Input placeholder="shadcn" {...field} />
+                                        <Input placeholder="Password" {...field} />
                                     </FormControl>
                                     <FormMessage />
                                 </FormItem>
@@ -111,7 +106,7 @@ export default function RegisterForm() {
                                 <FormItem>
                                     <FormLabel>ConfirmPassword</FormLabel>
                                     <FormControl>
-                                        <Input placeholder="shadcn" {...field} />
+                                        <Input placeholder="ConfirmPassword" {...field} />
                                     </FormControl>
                                     <FormMessage />
                                 </FormItem>
