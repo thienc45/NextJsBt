@@ -5,6 +5,6 @@ export default function LoginPage() {
     <div>
       Login Page
       <LoginForm />
-    </div>
+    </div>  
   )
 }

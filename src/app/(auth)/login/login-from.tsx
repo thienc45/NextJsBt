@@ -13,8 +13,10 @@ import {
 import { Input } from "@/components/ui/input"
 import { useToast } from "@/components/ui/use-toast"
 import { clientSessionToken } from "@/lib/http"
+import { handleErrorApi } from "@/lib/utils"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useRouter } from "next/navigation"
+import { useState } from "react"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
 import { LoginBody, LoginBodyType } from '../../schemaValidations/auth.schema'
@@ -26,6 +28,7 @@ const formSchema = z.object({
 export default function LoginForm() {
     const { toast } = useToast()
     const router = useRouter()
+    const [isloading, setIsLoading] = useState(false)
 
     const form = useForm<LoginBodyType>({
         resolver: zodResolver(LoginBody),
@@ -38,10 +41,12 @@ export default function LoginForm() {
 
 
     async function onSubmit(values: LoginBodyType) {
+        if (isloading) return
+        setIsLoading(true)
         try {
-            const response =
+            const res =
                 await authApiRequest.login(values)
-            console.log(response + "ppppppppppppppppp");
+                // localStorage.setItem('sessionToken', res.payload.data.token );
             // await fetch(`${envConfig.NEXT_PUBLIC_API_ENDPOINT}/auth/login`, {
             //     body: JSON.stringify(values),
             //     headers: {
@@ -60,15 +65,16 @@ export default function LoginForm() {
             //     return data
             // })
 
-            toast({
-                description: response.payload.message
-            })
-
+            // toast({
+            //     description: response.payload.message
+            // })
+            console.log("---seeee" + res.payload.data.token)
             // await authApiRequest.auth({sessionToken:response.payload.data.token})
             const resultFromNextServer =
-                await authApiRequest.auth({ sessionToken: response.payload.data.token })
+                await authApiRequest.auth({ sessionToken: res.payload.data.token,expiresAt: res.payload.data.expiresAt})
+            // clientSessionToken.value = res.payload.data.token
             // await fetch('/api/auth', {
-            //     body: JSON.stringify(response),
+            //     body: JSON.stringify(res.payload.data.token),
             //     headers: {
             //         'Content-Type': 'application/json',
             //     },
@@ -85,28 +91,19 @@ export default function LoginForm() {
             //         }
             //         return data
             //     })
-            clientSessionToken.value = response.payload.data.token
+
+            clientSessionToken.value = res.payload.data.token 
             router.push('/me')
             // setSessionToken(resultFromNextServer.payload.data.token)
-            console.log(resultFromNextServer)
+            // console.log(resultFromNextServer)
         } catch (error: any) {
-            console.log(error)
-            const errors = error.payload.errors as { field: string; message: string }[];
-            const status = error.status as number;
-
-            if (status === 422 && Array.isArray(errors)) {
-                errors.forEach((errorItem) => {
-                    form.setError(errorItem.field as 'email' | 'password', {
-                        type: 'server',
-                        message: errorItem.message,
-                    });
-                });
-            } else {
-                toast({
-                    title: 'Lỗi',
-                    description: error.payload.message,
-                });
-            }
+            handleErrorApi({
+                error,
+                setError: form.setError
+            })
+        } finally {
+            router.refresh()
+            setIsLoading(false)
         }
     }
 

@@ -1,10 +1,15 @@
-import envConfig from '@/config'
-import { cookies } from 'next/headers'
-import React from 'react'
-import Profile from './profile'
-import accountApiRequest from '@/apirequest/account'
 
+import accountApiRequest from '@/apirequest/account'
+import { cookies } from 'next/headers'
+import Profile from './profile'
+import ProfileForm from './profile-form'
+import { Metadata } from 'next'
+export const metadata: Metadata = {
+  title: 'Hồ sơ người dùng'
+}
 export default async function MeProfife() {
+
+  
 
   const cookieStore = cookies()
   const sessionToken = cookieStore.get('sessionToken')
@@ -15,8 +20,8 @@ export default async function MeProfife() {
   return (
     <div>
       <h1>Profile</h1>
-      <Profile />
-      {result.payload.data.name}
+      <Profile />  
+      <ProfileForm  profile={result.payload.data} />
     </div>
   )
 }

@@ -18,6 +18,9 @@ import { z } from "zod"
 import { RegisterBody, RegisterBodyType } from '../../schemaValidations/auth.schema'
 
 import { useRouter } from "next/navigation"
+import { Result } from "postcss"
+import { handleErrorApi } from "@/lib/utils"
+import { useState } from "react"
 
 const formSchema = z.object({
     username: z.string().min(2).max(50),
@@ -27,7 +30,7 @@ export default function RegisterForm() {
 
     const { toast } = useToast()
     const router = useRouter()
-
+    const [isloading,setIsLoading] =  useState(false)
 
     const form = useForm<RegisterBodyType>({
         resolver: zodResolver(RegisterBody),
@@ -40,14 +43,29 @@ export default function RegisterForm() {
     })
 
     async function onSubmit(values: RegisterBodyType) {
-
-        const response = await authApiRequest.register(values)
-        // try{
-        //   toast({
-
-        //   })  
-        // }
+        if(isloading)  return
+        setIsLoading(true)
+        try {
+          const response = await authApiRequest.register(values);
+          await authApiRequest.auth({
+            sessionToken: response.payload.data.token,
+            expiresAt: response.payload.data.expiresAt
+          })
+          toast({
+            description: response.payload.message
+          });
+          router.push('/me');
+        } catch (error: any) {
+          handleErrorApi({
+            error,
+            setError: form.setError
+          });
+        }
+    finally{
+        setIsLoading (false)
     }
+      }
+      
 
 
     return (

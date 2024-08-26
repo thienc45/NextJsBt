@@ -4,9 +4,6 @@ import {
 } from "@/app/schemaValidations/auth.schema";
 import http from "@/lib/http";
 
-// const accountApiRequest = {
-//   me: (sessionToken:string)
-// }
 const accountApiRequest = {
   me: (sessionToken: string) =>
     http.get<AccountResType>("account/me", {
